@@ -1,0 +1,60 @@
+pipeline {
+    agent { label 'lab' }
+
+    environment {
+        REGISTRY   = "hieutv.registry.com"
+        IMAGE_TAG  = "3"
+        KUBECONFIG = "/home/lab/.kube/config"
+    }
+
+    stages {
+
+        stage('Read Services Config') {
+            steps {
+                script {
+                    services = readJSON file: 'services.json'
+                    echo "Services to deploy: ${services*.name}"
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    def deployStages = [:]
+
+                    for (s in services) {
+                        def service = s
+                        deployStages[service.name] = {
+                            sh """
+                            echo "Deploying ${service.name}"
+                            echo "Using image: ${REGISTRY}/${service.name}:${IMAGE_TAG}"
+
+                            # Apply manifest (structure only)
+                            kubectl apply -f ${service.k8sYaml}
+
+                            # Update image version
+                            kubectl set image deployment/${service.name} \
+                              server=${REGISTRY}/${service.name}:${IMAGE_TAG}
+
+                            # Wait rollout
+                            kubectl rollout status deployment/${service.name}
+                            """
+                        }
+                    }
+
+                    parallel deployStages
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo " CD SUCCESS – All services deployed"
+        }
+        failure {
+            echo " CD FAILED – Check rollout & image pull"
+        }
+    }
+}

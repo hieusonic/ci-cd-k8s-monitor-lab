@@ -1,0 +1,52 @@
+pipeline {
+    agent { label 'lab' }
+
+    environment {
+        REGISTRY = "hieutv.registry.com"
+        BUILD_TAG = "${env.BUILD_NUMBER}"
+    }
+
+    stages {
+
+        stage('Read Services Config') {
+            steps {
+                script {
+        
+                    services = readJSON file: 'services.json'
+                    echo "Loaded services: ${services*.name}"
+                }
+            }
+        }
+
+        stage('Build & Push Docker Images') {
+            steps {
+                script {
+                 
+                    def buildStages = [:]
+
+                    for (s in services) {
+                        def service = s
+                        buildStages[service.name] = {
+                            sh """
+                            echo "Building image for ${service.name}"
+                            docker build -t ${REGISTRY}/${service.name}:${BUILD_TAG} ${service.dockerPath}
+                            docker push ${REGISTRY}/${service.name}:${BUILD_TAG}
+                            """
+                        }
+                    }
+
+                    parallel buildStages
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo " CI pipeline finished successfully for all services!"
+        }
+        failure {
+            echo " CI pipeline failed!"
+        }
+    }
+}
