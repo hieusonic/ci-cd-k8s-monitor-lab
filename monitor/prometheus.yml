@@ -1,0 +1,55 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Prometheus self monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets:
+          - "10.10.92.39:9090"
+        labels:
+          app: "prometheus"
+
+  # Jenkins metrics
+  - job_name: "jenkins"
+    metrics_path: /prometheus
+    static_configs:
+      - targets:
+          - "10.10.92.33:8080"
+        labels:
+          app: "jenkins-master"
+
+  # Jenkins master node-exporter
+  - job_name: "jenkins-master-node"
+    static_configs:
+      - targets:
+          - "10.10.92.33:9100"
+        labels:
+          role: "jenkins-master"
+
+  # Jenkins agent node-exporter
+  - job_name: "jenkins-agent-node"
+    static_configs:
+      - targets:
+          - "10.10.92.32:9100"
+        labels:
+          role: "jenkins-agent"
+
+  # Kubernetes nodes node-exporter
+  - job_name: "k8s-node-exporter"
+    static_configs:
+      - targets:
+          - "10.10.92.41:9100"
+          - "10.10.92.42:9100"
+        labels:
+          role: "k8s-node"
+
+  # Kubernetes kube-state-metrics
+  - job_name: "kube-state-metrics"
+    static_configs:
+      - targets:
+          - "10.10.92.41:30080"
+          - "10.10.92.42:30080"
+        labels:
+          role: "k8s-cluster"
