@@ -21,12 +21,9 @@ openssl req -x509 -new -nodes \
 ```
 
 ##### File sinh ra
+ca.crt: Phân phối cho Jenkins, Kubernetes nodes, Docker client để thiết lập trust
 
-###### ca.crt
-→ Phân phối cho Jenkins, Kubernetes nodes, Docker client để thiết lập trust
-
-###### ca.key
-→ Private key của CA – bắt buộc giữ kín, không copy, không commit
+ca.key: Private key của CA – bắt buộc giữ kín, không copy, không commit
 ### STEP 2 – Tạo Server Private Key cho Docker Registry
 
 #### Tạo private key cho Docker Registry
@@ -51,7 +48,6 @@ subjectAltName = DNS:hieutv.registry.com,IP:10.10.92.43
 ### STEP 4 – Tạo Certificate Signing Request (CSR)
 
 ```bash
-# Tạo CSR cho Docker Registry
 openssl req -new \
   -key registry.key \
   -out registry.csr \
@@ -64,7 +60,6 @@ registry.csr: Certificate Signing Request để CA ký
 ### STEP 5 – Ký Server Certificate bằng CA nội bộ
 
 ```bash
-# Ký certificate cho Docker Registry bằng CA
 openssl x509 -req \
   -in registry.csr \
   -CA ca.crt \
@@ -82,3 +77,4 @@ openssl x509 -req \
 
 
 ## Cấu hình nginx với chứng chỉ tự ký 
+
