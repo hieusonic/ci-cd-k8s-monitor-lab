@@ -29,7 +29,7 @@ openssl req -x509 -new -nodes \
 → Private key của CA – bắt buộc giữ kín, không copy, không commit
 ### STEP 2 – Tạo Server Private Key cho Docker Registry
 
-# Tạo private key cho Docker Registry
+#### Tạo private key cho Docker Registry
 openssl genrsa -out registry.key 2048
 
 File sinh ra
