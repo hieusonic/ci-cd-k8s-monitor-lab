@@ -1,0 +1,10 @@
+[
+    {
+        "name": "adservice",
+        "dockerPath": "src/adservice"
+    },
+    {
+        "name": "paymentservice",
+        "dockerPath": "src/paymentservice"
+    }
+]
