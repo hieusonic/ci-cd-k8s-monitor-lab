@@ -27,7 +27,7 @@ openssl req -x509 -new -nodes \
 
 ###### ca.key
 → Private key của CA – bắt buộc giữ kín, không copy, không commit
-## STEP 2 – Tạo Server Private Key cho Docker Registry
+### STEP 2 – Tạo Server Private Key cho Docker Registry
 
 # Tạo private key cho Docker Registry
 openssl genrsa -out registry.key 2048
@@ -37,18 +37,18 @@ registry.key
 Sử dụng cho Nginx (Docker Registry)
 
 
-## STEP 3 – Tạo file SAN (Subject Alternative Name) (Bắt buộc)
+### STEP 3 – Tạo file SAN (Subject Alternative Name) (Bắt buộc)
 
 
-# Tạo file cấu hình SAN
-nano openssl-san.cnf
+#### Tạo file cấu hình SAN
+openssl-san.cnf
 
-# Nội dung file openssl-san.cnf
+#### Nội dung file openssl-san.cnf
 subjectAltName = DNS:hieutv.registry.com,IP:10.10.92.43
 
 
 
-## STEP 4 – Tạo Certificate Signing Request (CSR)
+### STEP 4 – Tạo Certificate Signing Request (CSR)
 
 ```bash
 # Tạo CSR cho Docker Registry
@@ -57,15 +57,11 @@ openssl req -new \
   -out registry.csr \
   -subj "/C=VN/ST=HN/O=LabRegistry/CN=hieutv.registry.com"
 ```
-# File sinh ra
-# registry.csr
-# → Certificate Signing Request để CA ký
+##### File sinh ra
+registry.csr: Certificate Signing Request để CA ký
 
 
----
-
-```md
-## STEP 5 – Ký Server Certificate bằng CA nội bộ
+### STEP 5 – Ký Server Certificate bằng CA nội bộ
 
 ```bash
 # Ký certificate cho Docker Registry bằng CA
@@ -79,10 +75,10 @@ openssl x509 -req \
   -sha256 \
   -extfile openssl-san.cnf
 ```
-# File quan trọng sau khi hoàn thành
-# registry.crt  → Cấu hình cho Nginx (Docker Registry)
-# registry.key  → Cấu hình cho Nginx
-# ca.crt        → Import vào Docker client, Kubernetes nodes, Jenkins
+##### File quan trọng sau khi hoàn thành
+###### registry.crt  Cấu hình cho Nginx (Docker Registry)
+###### registry.key  Cấu hình cho Nginx
+###### ca.crt        Import vào Docker client, Kubernetes nodes, Jenkins
 
 
 ## Cấu hình nginx với chứng chỉ tự ký 
