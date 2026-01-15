@@ -32,7 +32,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: frontend
+          image: hieutv.registry.com/frontend:PLACEHOLDER
           ports:
           - containerPort: 8080
           readinessProbe:
