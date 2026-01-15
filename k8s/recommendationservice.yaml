@@ -30,7 +30,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: recommendationservice
+        image: hieutv.registry.com/recommendationservice:PLACEHOLDER
         ports:
         - containerPort: 8080
         readinessProbe:
