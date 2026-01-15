@@ -30,7 +30,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: emailservice
+        image: hieutv.registry.com/emailservice:PLACEHOLDER
         ports:
         - containerPort: 8080
         env:
