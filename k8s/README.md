@@ -1,6 +1,6 @@
 # Các manifest Kubernetes của hệ thống Microservices
 
-Tài liệu này mô tả các file deployment dùng để triển khai các microservice trong Kubernetes cluster.
+Tài liệu này mô tả các file manifest dùng để triển khai các microservice trong Kubernetes cluster.
 
 ---
 
