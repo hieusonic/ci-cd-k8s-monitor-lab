@@ -3,15 +3,26 @@ pipeline {
 
     environment {
         REGISTRY = "hieutv.registry.com"
-        BUILD_TAG = "${env.BUILD_NUMBER}"
     }
 
     stages {
 
+        stage('Get Git Commit Hash') {
+            steps {
+                script {
+                    IMAGE_TAG = sh(
+                        script: "git rev-parse --short HEAD",
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Using IMAGE_TAG (git commit): ${IMAGE_TAG}"
+                }
+            }
+        }
+
         stage('Read Services Config') {
             steps {
                 script {
-        
                     services = readJSON file: 'services.json'
                     echo "Loaded services: ${services*.name}"
                 }
@@ -21,7 +32,6 @@ pipeline {
         stage('Build & Push Docker Images') {
             steps {
                 script {
-                 
                     def buildStages = [:]
 
                     for (s in services) {
@@ -29,8 +39,9 @@ pipeline {
                         buildStages[service.name] = {
                             sh """
                             echo "Building image for ${service.name}"
-                            docker build -t ${REGISTRY}/${service.name}:${BUILD_TAG} ${service.dockerPath}
-                            docker push ${REGISTRY}/${service.name}:${BUILD_TAG}
+                            echo "Image tag: ${IMAGE_TAG}"
+                            docker build -t ${REGISTRY}/${service.name}:${IMAGE_TAG} ${service.dockerPath}
+                            docker push ${REGISTRY}/${service.name}:${IMAGE_TAG}
                             """
                         }
                     }
@@ -43,10 +54,11 @@ pipeline {
 
     post {
         success {
-            echo " CI pipeline finished successfully for all services!"
+            echo "CI pipeline finished successfully for all services!"
+            echo "Image tag used: ${IMAGE_TAG}"
         }
         failure {
-            echo " CI pipeline failed!"
+            echo "CI pipeline failed!"
         }
     }
 }
