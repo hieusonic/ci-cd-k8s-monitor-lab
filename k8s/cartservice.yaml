@@ -30,7 +30,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: cartservice
+        image: hieutv.registry.com/cartservice:PLACEHOLDER
         ports:
         - containerPort: 7070
         env:
