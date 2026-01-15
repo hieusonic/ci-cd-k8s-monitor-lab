@@ -1,6 +1,6 @@
 # Triển khai private registry với TLS theo mô hình CA-signed. Nginx dùng server certificate được CA ký, Jenkins và Kubernetes nodes trust CA.
 ## Tạo chứng chỉ tự ký
-### STEP 1 – Tạo Certificate Authority (CA)
+### Tạo Certificate Authority (CA)
 
 CA (Certificate Authority) đóng vai trò là **root of trust**, dùng để ký các chứng chỉ SSL cho các service nội bộ
 trong hệ thống (Docker Registry, Kubernetes, Jenkins, …).
@@ -24,7 +24,7 @@ openssl req -x509 -new -nodes \
 ca.crt: Phân phối cho Jenkins Agent, Kubernetes nodes để thiết lập trust
 
 ca.key: Private key của CA – giữ lại tại server Registry
-### STEP 2 – Tạo Server Private Key cho Docker Registry
+### Tạo Server Private Key cho Docker Registry
 
 #### Tạo private key cho Docker Registry
 openssl genrsa -out registry.key 2048
@@ -34,7 +34,7 @@ registry.key
 Sử dụng cho Nginx (Docker Registry)
 
 
-### STEP 3 – Tạo file SAN (Subject Alternative Name)
+### Tạo file SAN (Subject Alternative Name)
 
 
 #### Tạo file cấu hình SAN
@@ -67,7 +67,7 @@ IP.1  = 10.10.92.43
 
 
 
-### STEP 4 – Tạo Certificate Signing Request (CSR)
+### Tạo Certificate Signing Request (CSR)
 
 ```bash
 openssl req -new \
@@ -79,7 +79,7 @@ openssl req -new \
 registry.csr: Certificate Signing Request để CA ký
 
 
-### STEP 5 – Ký Server Certificate bằng CA nội bộ
+### Ký Server Certificate bằng CA nội bộ
 
 ```bash
 openssl x509 -req \
