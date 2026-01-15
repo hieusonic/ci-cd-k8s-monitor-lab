@@ -30,7 +30,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: productcatalogservice
+        image: hieutv.registry.com/productcatalogservice:PLACEHOLDER
         ports:
         - containerPort: 3550
         env:
