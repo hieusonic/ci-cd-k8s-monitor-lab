@@ -29,7 +29,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: shippingservice
+        image: hieutv.registry.com/shippingservice:PLACEHOLDER
         ports:
         - containerPort: 50051
         env:
