@@ -34,7 +34,7 @@ registry.key
 Sử dụng cho Nginx (Docker Registry)
 
 
-### STEP 3 – Tạo file SAN (Subject Alternative Name) (Bắt buộc)
+### STEP 3 – Tạo file SAN (Subject Alternative Name)
 
 
 #### Tạo file cấu hình SAN
@@ -157,13 +157,12 @@ server = "https://hieutv.registry.com"
   capabilities = ["pull", "resolve"]
   ca = "/etc/containerd/certs.d/hieutv.registry.com/ca.crt"
 ```
-#### Sửa file /etc/containerd/config.toml để containerd sẽ tìm certificates của registry private
-Mở file và sửa thành đoạn code sau 
+#### Sửa file /etc/containerd/config.toml để containerd tìm certificates của registry private
 ```bash
 [plugins."io.containerd.grpc.v1.cri".registry]
   config_path = "/etc/containerd/certs.d"
 ```
-#### Sau đó restart containerd
+#### Restart containerd
 ```bash
 sudo systemctl restart containerd
 ```
