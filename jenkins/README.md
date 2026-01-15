@@ -1,12 +1,11 @@
 # Jenkinsfile phân tách làm 2 phần riêng biệt, pipeline cho CI và pipeline cho CD
 ## 1. Jenkinsfile-CI 
 ### 1.1 Mục tiêu của Pipeline
-Pipeline Jenkins được thiết kế triển khai quy trình **Continuous Integration (CI)** cho hệ thống **microservices**, với các mục tiêu chính sau:
+Pipeline Jenkins được thiết kế triển khai quy trình **Continuous Integration (CI)** cho hệ thống **microservices**, với các mục tiêu:
 
 - Tự động build Docker image cho nhiều service
-- Đẩy Docker image lên **Private Docker Registry**
+- Push Docker image lên **Private Docker Registry**
 - Thực hiện build **song song** để tối ưu thời gian xử lý
-- Cho phép **mở rộng hệ thống** mà không cần chỉnh sửa Jenkinsfile
 
 Pipeline hoạt động dựa trên cấu hình **động**, được định nghĩa trong file `services.json`, giúp tách biệt logic CI khỏi cấu hình service.
 ### 1.2 Jenkins Agent
@@ -14,7 +13,7 @@ Pipeline được thực thi trên Jenkins Agent có label lab
 
 Agent có:
 
-Docker
+Docker để build image từ source code chứa Dockerfile, docker push
 Quyền push image lên registry
 Source code của project được pull về từ repo Github
 
@@ -54,14 +53,14 @@ Ví dụ file service.json
 ### 1.5 Build & Push Docker Images
 Mục đích
 Build Docker image cho từng microservice
-Push image lên Docker Registry
+Push image lên Registry
 Thực thi song song (parallel) để tối ưu thời gian
 #### 1.5.1 Tạo các stage động
 ```bash
 def buildStages = [:]
 ```
-buildStages là một map dùng để lưu các job build tương ứng với từng service
-Mỗi service → 1 nhánh chạy song song vì sử dụng Parallel
+buildStages tạo một map dùng để lưu các job build tương ứng với từng service
+Mỗi service là 1 nhánh chạy song song vì sử dụng Parallel, số lượng nhánh chạy song song dựa vào cài đặt và tài nguyên của Jenkins Agent
 #### 1.5.2 Build & Push cho từng service
 ```bash
 docker build -t ${REGISTRY}/${service.name}:${BUILD_TAG} ${service.dockerPath}
@@ -78,8 +77,8 @@ Push image lên registry
 ```bash
 parallel buildStages
 ```
-Build tất cả microservices cùng lúc dựa trên số lượng luồng build của Agnet
-Giảm đáng kể thời gian CI khi số lượng service tăng
+Build tất cả microservices cùng lúc dựa trên số lượng luồng build của Agent đã được cấu hình và dựa trên tài nguyên của Jenkins Agent
+Giảm thời gian CI khi số lượng service tăng
 ### 1.6 Post Actions
 Khi pipeline thành công
 ```bash
@@ -97,7 +96,7 @@ failure {
     echo " CI pipeline failed!"
 }
 ```
-Chỉ cần 1 service lỗi → toàn pipeline fail
+Khi 1 service lỗi toàn pipeline fail
 ## 2. Jenkinsfile-CD
 ### 2.1 Mục tiêu
 Triển khai các microservice lên Kubernetes Cluster
@@ -110,7 +109,7 @@ Thực hiện deploy song song để tối ưu thời gian
 agent { label 'lab' }
 ```
 
-Pipeline được thực thi trên Jenkins agent lab, agent này có:
+Pipeline được thực thi trên Jenkins Agent lab, agent này có:
 
 kubectl được cài đặt
 Quyền truy cập Kubernetes Cluster
@@ -127,14 +126,14 @@ environment {
 ```
 | Biến         | Mô tả                                                |
 | ------------ | ---------------------------------------------------- |
-| `REGISTRY`   | Địa chỉ Docker Registry                              |
+| `REGISTRY`   | Địa chỉ Docker Registry(địa chỉ theo domain)                              |
 | `IMAGE_TAG`  | Tag của Docker image được deploy                     |
 | `KUBECONFIG` | Đường dẫn kubeconfig dùng để xác thực với Kubernetes |
 
 
 ### 2.4 Read Services Config
 #### 2.4.1 Mục đích
-Stage này đọc danh sách các microservice cần deploy từ file services.json, đảm bảo pipeline CD có thể tái sử dụng cấu hình đã định nghĩa trong CI.
+Stage đọc danh sách các microservice cần deploy từ file services.json, đảm bảo pipeline CD có thể tái sử dụng cấu hình đã định nghĩa trong CI.
 #### 2.4.2 Cách hoạt động
 ```bash
 services = readJSON file: 'services.json'
@@ -163,7 +162,7 @@ Mỗi service tương ứng với một nhánh deploy độc lập
 ```bash
 kubectl apply -f <k8sYaml>
 ```
-Manifest chỉ đóng vai trò định nghĩa cấu trúc tài nguyên (Deployment, Service, Replica, …)
+Manifest đóng vai trò định nghĩa cấu trúc tài nguyên (Deployment, Service, Replica, …)
 Không cố định image tag trong file YAML
 Giúp tách biệt cấu hình hạ tầng và phiên bản ứng dụng
 
@@ -180,9 +179,9 @@ Kích hoạt cơ chế rolling update
 ```bash
 kubectl rollout status deployment/<service-name>
 ```
-Pipeline chờ đến khi rollout hoàn tất
-Nếu rollout thất bại, pipeline sẽ bị đánh dấu lỗi
-Đảm bảo chỉ deploy thành công khi service sẵn sàng hoạt động
+Pipeline chờ khi rollout hoàn tất
+Nếu rollout thất bại, pipeline đánh dấu lỗi
+Đảm bảo deploy thành công khi service sẵn sàng hoạt động
 
 #### 2.5.6 Thực thi song song
 ```bash
@@ -199,7 +198,7 @@ success {
     echo "CD SUCCESS – All services deployed"
 }
 ```
-Pipeline chỉ được đánh dấu thành công khi toàn bộ microservice hoàn tất rollout thành công.
+Pipeline được đánh dấu thành công khi toàn bộ microservice hoàn tất rollout thành công.
 
 #### 2.6.1 Khi pipeline thất bại
 ```bash
