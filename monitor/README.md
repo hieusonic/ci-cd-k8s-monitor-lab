@@ -3,7 +3,7 @@
 
 Triển khai **kube-state-metrics** trong Kubernetes Cluster, phục vụ hệ thống **monitoring dựa trên Prometheus và Grafana**.
 
-kube-state-metrics là thành phần chuyên thu thập **metrics về trạng thái (state)** của các Kubernetes object thông qua **Kubernetes API Server**.  
+kube-state-metrics là thành phần thu thập **metrics về trạng thái (state)** của các Kubernetes object thông qua **Kubernetes API Server**.  
 Thành phần này **không thu thập resource usage** (CPU, Memory), mà phản ánh **trạng thái logic** của cluster.
 
 ---
@@ -31,7 +31,7 @@ Thành phần này **không thu thập resource usage** (CPU, Memory), mà phả
 - Sử dụng image chính thức:
   - `registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.1`
 - Container expose **HTTP endpoint port `8080`** để cung cấp metrics
-- kube-state-metrics chỉ thực hiện:
+- kube-state-metrics thực hiện:
   - Read-only (list, watch) từ Kubernetes API Server
 - Không can thiệp hoặc thay đổi workload đang chạy trong cluster
 
@@ -103,7 +103,7 @@ Thành phần này **không thu thập resource usage** (CPU, Memory), mà phả
 
 ## node-exporter.yaml
 
-Triển khai **Node Exporter** để thu thập **metrics hệ điều hành của từng node** trong Kubernetes Cluster, phục vụ hệ thống monitoring với **Prometheus và Grafana**.
+Triển khai **Node Exporter** để thu thập **metrics của từng node** trong Kubernetes Cluster, phục vụ hệ thống monitoring với **Prometheus và Grafana**.
 
 Node Exporter cung cấp **node-level metrics**, bổ sung lớp giám sát hạ tầng cho hệ thống monitoring tổng thể.
 
@@ -133,7 +133,7 @@ Node Exporter cung cấp **node-level metrics**, bổ sung lớp giám sát hạ
 ### ServiceAccount
 - Tạo **ServiceAccount `node-exporter`** trong namespace `monitoring`
 - Được sử dụng cho DaemonSet node-exporter
-- Không yêu cầu quyền RBAC đặc biệt vì:
+- Không yêu cầu quyền RBAC :
   - Node Exporter **không truy cập Kubernetes API**
 
 ---
