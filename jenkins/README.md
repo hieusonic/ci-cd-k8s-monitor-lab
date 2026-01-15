@@ -21,16 +21,30 @@ Source code của project được pull về từ repo Github
 ```bash
 environment {
     REGISTRY = "hieutv.registry.com"
-    BUILD_TAG = "${env.BUILD_NUMBER}"
 }
 ```
 | Biến        | Ý nghĩa                                        |
 | ----------- | ---------------------------------------------- |
 | `REGISTRY`  | Địa chỉ Docker Registry private                |
-| `BUILD_TAG` | Tag image, lấy theo `BUILD_NUMBER` của Jenkins |
+### 1.4 Get Git Commit Hash
+Mục đích:
+Lấy git commit hash (short) của source code hiện tại để dùng làm Docker image tag.
+```bash
+stage('Get Git Commit Hash')
+```
+
+Pipeline sử dụng lệnh:
+```bash
+git rev-parse --short HEAD
+```
+Giá trị commit hash được gán vào biến: IMAGE_TAG
+Ý nghĩa:
+Mỗi image gắn chặt với một phiên bản source code
+Dễ rollback và truy vết khi deploy hoặc debug
+Phù hợp với CI/CD cho microservices
 
 
-### 1.4 Read Services Config
+### 1.5 Read Services Config
 Mục đích
 Đọc danh sách các microservice từ file services.json để pipeline không hard-code service.
 ```bash
@@ -63,14 +77,15 @@ buildStages tạo một map dùng để lưu các job build tương ứng với 
 Mỗi service là 1 nhánh chạy song song vì sử dụng Parallel, số lượng nhánh chạy song song dựa vào cài đặt và tài nguyên của Jenkins Agent
 #### 1.5.2 Build & Push cho từng service
 ```bash
-docker build -t ${REGISTRY}/${service.name}:${BUILD_TAG} ${service.dockerPath}
-docker push ${REGISTRY}/${service.name}:${BUILD_TAG}
+docker build -t ${REGISTRY}/${service.name}:${IMAGE_TAG} ${service.dockerPath}
+docker push ${REGISTRY}/${service.name}:${IMAGE_TAG}
+
 ```
 Với mỗi service:
 Build image từ thư mục chứa Dockerfile
 Gắn tag theo:
 ```bash
-<registry>/<service-name>:<BUILD_NUMBER>
+<registry>/<service-name>:<git-commit-hash>
 ```
 Push image lên registry
 #### 1.5.3 Chạy song song (Parallel Execution)
