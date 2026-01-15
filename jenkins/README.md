@@ -131,11 +131,11 @@ Quyền truy cập Kubernetes Cluster
 File kubeconfig hợp lệ
 
 ### 2.3 Cấu hình biến môi trường
-
+ví dụ 
 ```bash
 environment {
     REGISTRY   = "hieutv.registry.com"
-    IMAGE_TAG  = "3"
+    IMAGE_TAG  = "3" // theo tag image chỉ định deploy
     KUBECONFIG = "/home/lab/.kube/config"
 }
 ```
