@@ -29,7 +29,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: checkoutservice
+          image: hieutv.registry.com/checkoutservice:PLACEHOLDER
           ports:
           - containerPort: 5050
           readinessProbe:
