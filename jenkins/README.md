@@ -99,3 +99,116 @@ failure {
 ```
 Chỉ cần 1 service lỗi → toàn pipeline fail
 ## 2. Jenkinsfile-CD
+### 2.1 Mục tiêu
+Triển khai các microservice lên Kubernetes Cluster
+Cập nhật phiên bản Docker image cho từng service
+Theo dõi trạng thái rollout sau khi deploy
+Thực hiện deploy song song để tối ưu thời gian
+
+### 2.2 Môi trường thực thi (Agent)
+```bash
+agent { label 'lab' }
+```
+
+Pipeline được thực thi trên Jenkins agent lab, agent này có:
+
+kubectl được cài đặt
+Quyền truy cập Kubernetes Cluster
+File kubeconfig hợp lệ
+
+### 2.3 Cấu hình biến môi trường
+
+```bash
+environment {
+    REGISTRY   = "hieutv.registry.com"
+    IMAGE_TAG  = "3"
+    KUBECONFIG = "/home/lab/.kube/config"
+}
+```
+| Biến         | Mô tả                                                |
+| ------------ | ---------------------------------------------------- |
+| `REGISTRY`   | Địa chỉ Docker Registry                              |
+| `IMAGE_TAG`  | Tag của Docker image được deploy                     |
+| `KUBECONFIG` | Đường dẫn kubeconfig dùng để xác thực với Kubernetes |
+
+
+### 2.4 Read Services Config
+#### 2.4.1 Mục đích
+Stage này đọc danh sách các microservice cần deploy từ file services.json, đảm bảo pipeline CD có thể tái sử dụng cấu hình đã định nghĩa trong CI.
+#### 2.4.2 Cách hoạt động
+```bash
+services = readJSON file: 'services.json'
+```
+Mỗi service trong file cấu hình bao gồm các thuộc tính liên quan đến triển khai Kubernetes
+name: tên deployment
+k8sYaml: đường dẫn tới manifest Kubernetes (Deployment)
+Pipeline ghi log danh sách các service sẽ được triển khai để phục vụ kiểm soát quá trình deploy.
+
+### 2.5 Deploy to Kubernetes
+#### 2.5.1 Mục đích
+
+Áp dụng manifest Kubernetes
+Cập nhật phiên bản Docker image
+Theo dõi trạng thái rollout
+Thực hiện deploy song song cho nhiều service
+
+#### 2.5.2 Tạo các nhánh deploy động
+```bash
+def deployStages = [:]
+```
+Pipeline khởi tạo một map để lưu các nhánh deploy cho từng microservice
+Mỗi service tương ứng với một nhánh deploy độc lập
+
+#### 2.5.3 Áp dụng manifest Kubernetes
+```bash
+kubectl apply -f <k8sYaml>
+```
+Manifest chỉ đóng vai trò định nghĩa cấu trúc tài nguyên (Deployment, Service, Replica, …)
+Không cố định image tag trong file YAML
+Giúp tách biệt cấu hình hạ tầng và phiên bản ứng dụng
+
+#### 2.5.4 Cập nhật Docker image
+```bash
+kubectl set image deployment/<service-name> \
+  server=<registry>/<service-name>:<image-tag>
+```
+Cập nhật image cho container trong Deployment
+Kubernetes tự động tạo ReplicaSet mới
+Kích hoạt cơ chế rolling update
+
+#### 2.5.5 Theo dõi trạng thái rollout
+```bash
+kubectl rollout status deployment/<service-name>
+```
+Pipeline chờ đến khi rollout hoàn tất
+Nếu rollout thất bại, pipeline sẽ bị đánh dấu lỗi
+Đảm bảo chỉ deploy thành công khi service sẵn sàng hoạt động
+
+#### 2.5.6 Thực thi song song
+```bash
+parallel deployStages
+```
+Các microservice được deploy song song: 
+Rút ngắn thời gian triển khai
+Phù hợp với hệ thống microservices
+
+### 2.6 Xử lý sau pipeline (Post Actions)
+#### 2.6.1 Khi pipeline thành công
+```bash
+success {
+    echo "CD SUCCESS – All services deployed"
+}
+```
+Pipeline chỉ được đánh dấu thành công khi toàn bộ microservice hoàn tất rollout thành công.
+
+#### 2.6.1 Khi pipeline thất bại
+```bash
+failure {
+    echo "CD FAILED – Check rollout & image pull"
+}
+```
+Pipeline bị đánh dấu thất bại nếu xảy ra khi:
+Lỗi rollout
+Image pull thất bại
+Manifest Kubernetes không hợp lệ
+
